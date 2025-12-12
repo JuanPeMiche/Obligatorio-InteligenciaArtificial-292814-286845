@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Models and large files
+*.pkl
+*.pth
+*.h5
+*.hdf5
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
