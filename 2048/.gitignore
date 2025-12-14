@@ -8,12 +8,6 @@ ENV/
 *.pkl
 *.pickle
 
-# Resultados de experimentos
-results/*.csv
-results/plots/*.png
-results/plots/*.jpg
-results/*.json
-
 # Modelos guardados
 models/*.pkl
 models/*.pickle
