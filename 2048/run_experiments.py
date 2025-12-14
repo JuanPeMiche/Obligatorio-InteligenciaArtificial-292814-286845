@@ -111,7 +111,7 @@ def run_standard_experiments():
     suite.run_depth_comparison(
         ExpectimaxAgentOptimized,
         "Expectimax",
-        depths=[2, 3, 4],
+        depths=[2, 3],  # Profundidad 4 es extremadamente lenta (>1h por partida)
         num_games=20,
         weights_config='balanced'
     )
@@ -123,7 +123,7 @@ def run_standard_experiments():
     suite.run_depth_comparison(
         MinimaxAgentOptimized,
         "Minimax",
-        depths=[2, 3, 4],
+        depths=[2, 3],  # Profundidad 4 es extremadamente lenta
         num_games=20,
         weights_config='balanced'
     )

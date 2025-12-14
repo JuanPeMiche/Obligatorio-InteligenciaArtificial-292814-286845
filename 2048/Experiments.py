@@ -2,6 +2,7 @@
 Sistema de experimentación para evaluar agentes de 2048.
 Ejecuta múltiples partidas, registra métricas y guarda resultados.
 """
+import sys
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -47,10 +48,18 @@ class GameExperiment:
         moves = 0
         start_time = time.time()
         total_nodes_explored = 0
+        last_move_time = start_time
         
         done = False
         while not done:
+            move_start = time.time()
             action = self.agent.play(board)
+            move_time = time.time() - move_start
+            
+            # Log si un movimiento tarda más de 60 segundos
+            if move_time > 60:
+                print(f"\n⚠️  Movimiento {moves+1} tardó {move_time:.1f}s")
+                sys.stdout.flush()
             
             # Registrar nodos explorados si el agente lo soporta
             if hasattr(self.agent, 'nodes_explored'):
@@ -61,7 +70,9 @@ class GameExperiment:
             moves += 1
             
             if verbose and moves % 50 == 0:
-                print(f"  Move {moves}, Max tile: {board.get_max_tile()}")
+                elapsed = time.time() - start_time
+                print(f"  Move {moves}, Max tile: {board.get_max_tile()}, Elapsed: {elapsed:.1f}s")
+                sys.stdout.flush()
         
         elapsed_time = time.time() - start_time
         
@@ -100,8 +111,9 @@ class GameExperiment:
         print(f"Ejecutando experimento: {self.agent_name}")
         print(f"Número de partidas: {self.num_games}")
         print(f"{'='*60}\n")
+        sys.stdout.flush()
         
-        for game_id in tqdm(range(self.num_games), desc="Partidas"):
+        for game_id in tqdm(range(self.num_games), desc="Partidas", file=sys.stdout):
             result = self.run_single_game(game_id, verbose=False)
             self.results.append(result)
             
@@ -110,9 +122,11 @@ class GameExperiment:
                 print(f"  Max tile: {result['max_tile']}")
                 print(f"  Moves: {result['moves']}")
                 print(f"  Time: {result['time_seconds']:.2f}s")
+                sys.stdout.flush()
         
         df = pd.DataFrame(self.results)
         self._print_summary(df)
+        sys.stdout.flush()
         
         return df
     
@@ -162,6 +176,7 @@ class GameExperiment:
             print(f"  Total: {df['nodes_explored'].sum():.0f}")
         
         print(f"{'='*60}\n")
+        sys.stdout.flush()
 
 
 class ExperimentSuite:
@@ -186,9 +201,13 @@ class ExperimentSuite:
         print(f"\n{'#'*60}")
         print(f"# EXPERIMENTO: Comparación de Profundidades - {agent_type}")
         print(f"{'#'*60}\n")
+        sys.stdout.flush()
         
         results = []
-        for depth in depths:
+        for i, depth in enumerate(depths):
+            print(f"\n>>> Iniciando profundidad {depth} ({i+1}/{len(depths)})...")
+            sys.stdout.flush()
+            
             if agent_type == "Minimax":
                 agent = agent_class(depth=depth, use_alpha_beta=True, 
                                    weights_config=weights_config)
@@ -199,12 +218,18 @@ class ExperimentSuite:
             experiment = GameExperiment(agent, name, num_games)
             df = experiment.run_experiment(verbose=True)
             results.append(df)
+            
+            print(f"\n>>> Completada profundidad {depth} ({i+1}/{len(depths)})")
+            sys.stdout.flush()
         
         # Combinar y guardar resultados
+        print(f"\n>>> Combinando y guardando resultados...")
+        sys.stdout.flush()
         combined_df = pd.concat(results, ignore_index=True)
         filename = f"{self.output_dir}/{agent_type.lower()}_depth_comparison_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         combined_df.to_csv(filename, index=False)
         print(f"\n✓ Resultados guardados en: {filename}")
+        sys.stdout.flush()
         
         self.all_results.append(combined_df)
         return combined_df
