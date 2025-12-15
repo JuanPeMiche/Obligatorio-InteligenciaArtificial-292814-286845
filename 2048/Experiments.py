@@ -17,7 +17,6 @@ from Agent import Agent
 from Random_Agent import RandomAgent
 from Expectimax_Agent import ExpectimaxAgent, ExpectimaxAgentOptimized
 from Minimax_Agent import MinimaxAgent, MinimaxAgentOptimized
-from Heuristics import WEIGHT_CONFIGS
 
 
 class GameExperiment:

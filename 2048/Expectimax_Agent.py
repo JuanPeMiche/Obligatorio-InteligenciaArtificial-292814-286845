@@ -4,7 +4,6 @@ Expectimax es más adecuado para juegos con elementos aleatorios (estocásticos)
 """
 from Agent import Agent
 from GameBoard import GameBoard
-from Heuristics import combined_heuristic, WEIGHT_CONFIGS
 import numpy as np
 
 
@@ -15,21 +14,15 @@ class ExpectimaxAgent(Agent):
     - Nodos CHANCE: calcula el valor esperado de las fichas aleatorias
     """
     
-    def __init__(self, depth=4, weights=None, weights_config='balanced'):
+    def __init__(self, depth=4, weights=None, weights_config=None):
         """
         Args:
             depth: Profundidad máxima de búsqueda
-            weights: Diccionario personalizado de pesos para heurísticas
-            weights_config: Nombre de configuración predefinida ('balanced', 'aggressive', etc.)
+            weights: DEPRECATED - No se usa
+            weights_config: DEPRECATED - No se usa
         """
         self.depth = depth
-        
-        if weights is not None:
-            self.weights = weights
-        elif weights_config in WEIGHT_CONFIGS:
-            self.weights = WEIGHT_CONFIGS[weights_config]
-        else:
-            self.weights = WEIGHT_CONFIGS['balanced']
+        self.heuristic_func = None  # Se asigna externamente
         
         self.nodes_explored = 0  # Para estadísticas
     
@@ -155,9 +148,12 @@ class ExpectimaxAgent(Agent):
     
     def heuristic_utility(self, board: GameBoard) -> float:
         """
-        Evalúa un estado del tablero usando la función heurística combinada.
+        Evalúa un estado del tablero usando la función heurística asignada.
         """
-        return combined_heuristic(board, self.weights)
+        if self.heuristic_func is None:
+            # Fallback simple si no se asignó heurística
+            return len(board.get_available_cells()) * 10.0 + board.get_max_tile()
+        return self.heuristic_func(board)
 
 
 class ExpectimaxAgentOptimized(ExpectimaxAgent):

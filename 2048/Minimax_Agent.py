@@ -4,7 +4,6 @@ Aunque Minimax es típico para juegos adversariales, se puede adaptar para 2048.
 """
 from Agent import Agent
 from GameBoard import GameBoard
-from Heuristics import combined_heuristic, WEIGHT_CONFIGS
 import numpy as np
 
 
@@ -15,23 +14,17 @@ class MinimaxAgent(Agent):
     - Nodos MIN: simula el "oponente" (aparición de fichas en peor posición)
     """
     
-    def __init__(self, depth=4, use_alpha_beta=True, weights=None, weights_config='balanced'):
+    def __init__(self, depth=4, use_alpha_beta=True, weights=None, weights_config=None):
         """
         Args:
             depth: Profundidad máxima de búsqueda
             use_alpha_beta: Si True, usa poda Alpha-Beta; si False, Minimax básico
-            weights: Diccionario personalizado de pesos para heurísticas
-            weights_config: Nombre de configuración predefinida
+            weights: DEPRECATED - No se usa
+            weights_config: DEPRECATED - No se usa
         """
         self.depth = depth
         self.use_alpha_beta = use_alpha_beta
-        
-        if weights is not None:
-            self.weights = weights
-        elif weights_config in WEIGHT_CONFIGS:
-            self.weights = WEIGHT_CONFIGS[weights_config]
-        else:
-            self.weights = WEIGHT_CONFIGS['balanced']
+        self.heuristic_func = None  # Se asigna externamente
         
         self.nodes_explored = 0
         self.pruned_nodes = 0
@@ -197,9 +190,12 @@ class MinimaxAgent(Agent):
     
     def heuristic_utility(self, board: GameBoard) -> float:
         """
-        Evalúa un estado del tablero usando la función heurística combinada.
+        Evalúa un estado del tablero usando la función heurística asignada.
         """
-        return combined_heuristic(board, self.weights)
+        if self.heuristic_func is None:
+            # Fallback simple si no se asignó heurística
+            return len(board.get_available_cells()) * 10.0 + board.get_max_tile()
+        return self.heuristic_func(board)
 
 
 class MinimaxAgentOptimized(MinimaxAgent):

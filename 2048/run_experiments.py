@@ -1,325 +1,269 @@
 """
-Script principal para ejecutar todos los experimentos del ejercicio MEC.
-Este script está diseñado para ejecutarse durante la noche/largo plazo.
+Script principal para ejecutar TODOS los experimentos del obligatorio.
 
-Ejecuta una batería completa de experimentos que incluye:
-- Baseline con agente aleatorio
-- Comparación de profundidades (Minimax y Expectimax)
-- Comparación de heurísticas
-- Comparación Alpha-Beta Pruning
-- Comparación directa Minimax vs Expectimax
+Estructura de experimentos:
+- 3 Agentes: Minimax, Minimax+AlphaBeta, Expectimax
+- 3 Heurísticas: Simple, Intermediate, Complex
+- 2 Profundidades: 3, 4
+Total: 3 × 3 × 2 = 18 experimentos
+
+Cada experimento ejecuta 20 partidas y guarda resultados en CSV.
 """
 
 import sys
-import argparse
-from datetime import datetime
+import os
 import time
+import pandas as pd
+from datetime import datetime
+from typing import Dict, List
 
-from Experiments import ExperimentSuite
-from Expectimax_Agent import ExpectimaxAgent, ExpectimaxAgentOptimized
-from Minimax_Agent import MinimaxAgent, MinimaxAgentOptimized
+# Agregar el directorio actual al path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from Experiments import GameExperiment
+from Minimax_Agent import MinimaxAgent
+from Expectimax_Agent import ExpectimaxAgent
+from Heuristics import get_heuristic
 
 
-def print_header(text):
+def print_header(text: str):
     """Imprime un header formateado"""
-    print("\n" + "#" * 80)
-    print("#" + " " * 78 + "#")
-    print("#  " + text.center(74) + "  #")
-    print("#" + " " * 78 + "#")
-    print("#" * 80 + "\n")
+    print("\n" + "=" * 80)
+    print(text.center(80))
+    print("=" * 80 + "\n")
 
 
-def run_quick_experiments():
+def run_complete_experiments(num_games: int = 20):
     """
-    Ejecuta experimentos rápidos (para pruebas).
-    Menos partidas, profundidades menores.
+    Ejecuta la suite COMPLETA de experimentos según el obligatorio.
+    
+    Args:
+        num_games: Número de partidas por experimento
     """
-    print_header("MODO RÁPIDO - PRUEBAS")
-    print("⚡ Ejecutando experimentos de prueba con configuración reducida...")
-    print("   - 5 partidas por configuración")
-    print("   - Profundidades: 2, 3")
-    print("   - Tiempo estimado: 10-15 minutos\n")
+    print_header("EXPERIMENTOS COMPLETOS - OBLIGATORIO 2048")
     
-    suite = ExperimentSuite(output_dir="results")
+    # Crear directorio de resultados si no existe
+    os.makedirs("results", exist_ok=True)
     
-    # 1. Baseline
-    print("\n" + "="*80)
-    print("1/4: Baseline con Agente Aleatorio")
-    print("="*80)
-    suite.run_baseline_comparison(num_games=10)
+    # Configuración de experimentos
+    depths = [3, 4]
+    heuristics = ['simple', 'intermediate', 'complex']
+    configs = [1, 2]  # Dos configuraciones de pesos por heurística
     
-    # 2. Expectimax - Profundidades
-    print("\n" + "="*80)
-    print("2/4: Expectimax - Comparación de Profundidades")
-    print("="*80)
-    suite.run_depth_comparison(
-        ExpectimaxAgentOptimized, 
-        "Expectimax", 
-        depths=[2, 3],
-        num_games=5,
-        weights_config='balanced'
-    )
+    # Registro de todos los experimentos
+    all_experiments = []
+    experiment_number = 1
+    total_experiments = len(depths) * len(heuristics) * len(configs) * 3  # 2 depths × 3 heurísticas × 2 configs × 3 agentes
     
-    # 3. Minimax - Profundidades
-    print("\n" + "="*80)
-    print("3/4: Minimax - Comparación de Profundidades")
-    print("="*80)
-    suite.run_depth_comparison(
-        MinimaxAgentOptimized,
-        "Minimax",
-        depths=[2, 3],
-        num_games=5,
-        weights_config='balanced'
-    )
+    print(f"📊 Total de experimentos a ejecutar: {total_experiments}")
+    print(f"📊 Partidas por experimento: {num_games}")
+    print(f"📊 Total de partidas: {total_experiments * num_games}")
+    print(f"\n⏱️  Tiempo estimado: 6-12 horas\n")
     
-    # 4. Minimax vs Expectimax
-    print("\n" + "="*80)
-    print("4/4: Minimax vs Expectimax")
-    print("="*80)
-    suite.run_minimax_vs_expectimax(depth=3, num_games=10, weights_config='balanced')
+    try:
+        input("Presiona ENTER para comenzar...")
+    except EOFError:
+        print("Iniciando automáticamente...")
     
-    # Guardar resultados
-    suite.save_best_configs()
-    
-    print_header("✓ EXPERIMENTOS RÁPIDOS COMPLETADOS")
-
-
-def run_standard_experiments():
-    """
-    Ejecuta experimentos estándar (para trabajo normal).
-    Configuración balanceada entre exhaustividad y tiempo.
-    """
-    print_header("MODO ESTÁNDAR - EXPERIMENTOS COMPLETOS")
-    print("📊 Ejecutando suite completa de experimentos...")
-    print("   - 20-30 partidas por configuración")
-    print("   - Profundidades: 2, 3, 4")
-    print("   - Tiempo estimado: 2-4 horas\n")
-    
-    suite = ExperimentSuite(output_dir="results")
     start_time = time.time()
     
-    # 1. Baseline
-    print("\n" + "="*80)
-    print("1/6: Baseline con Agente Aleatorio")
-    print("="*80)
-    suite.run_baseline_comparison(num_games=50)
+    # Iterar por cada profundidad PRIMERO
+    for depth in depths:
+        print_header(f"PROFUNDIDAD: {depth}")
+        
+        # Iterar por cada heurística
+        for heuristic_name in heuristics:
+            
+            # Iterar por cada configuración de pesos
+            for config_num in configs:
+                print(f"\n{'#' * 80}")
+                print(f"  HEURÍSTICA: {heuristic_name.upper()} - CONFIG {config_num}")
+                print(f"{'#' * 80}\n")
+                
+                heuristic_func = get_heuristic(heuristic_name)
+                
+                # Crear función wrapper que incluye el parámetro config
+                def make_heuristic_with_config(heur_func, cfg):
+                    return lambda board: heur_func(board, config=cfg)
+                
+                heuristic_with_config = make_heuristic_with_config(heuristic_func, config_num)
+                heuristic_with_config = make_heuristic_with_config(heuristic_func, config_num)
+            
+                # ========== EXPERIMENTO 1: Minimax SIN Alpha-Beta ==========
+                print(f"\n[{experiment_number}/{total_experiments}] Minimax (sin AB) - {heuristic_name} - config{config_num} - depth={depth}")
+                
+                agent_minimax = MinimaxAgent(
+                    depth=depth,
+                    use_alpha_beta=False,
+                    weights_config=None,
+                    weights=None
+                )
+                agent_minimax.heuristic_func = heuristic_with_config
+                agent_name = f"Minimax_NoAB_{heuristic_name}_c{config_num}_d{depth}"
+                
+                experiment = GameExperiment(agent_minimax, agent_name, num_games)
+                df = experiment.run_experiment(verbose=True)
+                df['heuristic'] = heuristic_name
+                df['config'] = config_num
+                df['depth'] = depth
+                df['alpha_beta'] = False
+                df['algorithm'] = 'minimax'
+                
+                # Guardar resultado individual
+                filename = f"results/{agent_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+                df.to_csv(filename, index=False)
+                print(f"✅ Guardado: {filename}")
+                
+                all_experiments.append(df)
+                experiment_number += 1
+                
+                # ========== EXPERIMENTO 2: Minimax CON Alpha-Beta ==========
+                print(f"\n[{experiment_number}/{total_experiments}] Minimax (con AB) - {heuristic_name} - config{config_num} - depth={depth}")
+                
+                agent_minimax_ab = MinimaxAgent(
+                    depth=depth,
+                    use_alpha_beta=True,
+                    weights_config=None,
+                    weights=None
+                )
+                agent_minimax_ab.heuristic_func = heuristic_with_config
+                agent_name_ab = f"Minimax_AB_{heuristic_name}_c{config_num}_d{depth}"
+                
+                experiment_ab = GameExperiment(agent_minimax_ab, agent_name_ab, num_games)
+                df_ab = experiment_ab.run_experiment(verbose=True)
+                df_ab['heuristic'] = heuristic_name
+                df_ab['config'] = config_num
+                df_ab['depth'] = depth
+                df_ab['alpha_beta'] = True
+                df_ab['algorithm'] = 'minimax'
+                
+                # Guardar resultado individual
+                filename_ab = f"results/{agent_name_ab}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+                df_ab.to_csv(filename_ab, index=False)
+                print(f"✅ Guardado: {filename_ab}")
+                
+                all_experiments.append(df_ab)
+                experiment_number += 1
+                
+                # ========== EXPERIMENTO 3: Expectimax ==========
+                print(f"\n[{experiment_number}/{total_experiments}] Expectimax - {heuristic_name} - config{config_num} - depth={depth}")
+                
+                agent_expectimax = ExpectimaxAgent(
+                    depth=depth,
+                    weights_config=None,
+                    weights=None
+                )
+                agent_expectimax.heuristic_func = heuristic_with_config
+                agent_name_exp = f"Expectimax_{heuristic_name}_c{config_num}_d{depth}"
+                
+                experiment_exp = GameExperiment(agent_expectimax, agent_name_exp, num_games)
+                df_exp = experiment_exp.run_experiment(verbose=True)
+                df_exp['heuristic'] = heuristic_name
+                df_exp['config'] = config_num
+                df_exp['depth'] = depth
+                df_exp['alpha_beta'] = False
+                df_exp['algorithm'] = 'expectimax'
+                
+                # Guardar resultado individual
+                filename_exp = f"results/{agent_name_exp}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+                df_exp.to_csv(filename_exp, index=False)
+                print(f"✅ Guardado: {filename_exp}")
+                
+                all_experiments.append(df_exp)
+                experiment_number += 1
+                
+                # Progreso
+                elapsed = time.time() - start_time
+                avg_time_per_exp = elapsed / (experiment_number - 1)
+                remaining_exp = total_experiments - (experiment_number - 1)
+                eta = avg_time_per_exp * remaining_exp
+                
+                print(f"\n⏱️  Progreso: {experiment_number-1}/{total_experiments} completados")
+                print(f"⏱️  Tiempo transcurrido: {elapsed/60:.1f} min")
+                print(f"⏱️  ETA: {eta/60:.1f} min")
     
-    # 2. Expectimax - Profundidades
-    print("\n" + "="*80)
-    print("2/6: Expectimax - Comparación de Profundidades")
-    print("="*80)
-    suite.run_depth_comparison(
-        ExpectimaxAgentOptimized,
-        "Expectimax",
-        depths=[2, 3],  # Profundidad 4 es extremadamente lenta (>1h por partida)
-        num_games=20,
-        weights_config='balanced'
-    )
+    # ========== GUARDAR RESULTADOS COMBINADOS ==========
+    print_header("GUARDANDO RESULTADOS COMBINADOS")
     
-    # 3. Minimax - Profundidades
-    print("\n" + "="*80)
-    print("3/6: Minimax - Comparación de Profundidades")
-    print("="*80)
-    suite.run_depth_comparison(
-        MinimaxAgentOptimized,
-        "Minimax",
-        depths=[2, 3],  # Profundidad 4 es extremadamente lenta
-        num_games=20,
-        weights_config='balanced'
-    )
+    combined_df = pd.concat(all_experiments, ignore_index=True)
+    combined_filename = f"results/all_experiments_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    combined_df.to_csv(combined_filename, index=False)
+    print(f"✅ Todos los resultados guardados en: {combined_filename}")
     
-    # 4. Alpha-Beta Pruning
-    print("\n" + "="*80)
-    print("4/6: Impacto de Alpha-Beta Pruning")
-    print("="*80)
-    suite.run_alpha_beta_comparison(depth=3, num_games=20, weights_config='balanced')
-    
-    # 5. Heurísticas - Expectimax
-    print("\n" + "="*80)
-    print("5/6: Expectimax - Comparación de Heurísticas")
-    print("="*80)
-    suite.run_heuristic_comparison(
-        ExpectimaxAgentOptimized,
-        "Expectimax",
-        depth=3,
-        num_games=15
-    )
-    
-    # 6. Minimax vs Expectimax
-    print("\n" + "="*80)
-    print("6/6: Minimax vs Expectimax - Comparación Final")
-    print("="*80)
-    suite.run_minimax_vs_expectimax(depth=4, num_games=30, weights_config='balanced')
-    
-    # Guardar resultados
-    suite.save_best_configs()
-    
-    elapsed_time = time.time() - start_time
-    print_header(f"✓ EXPERIMENTOS COMPLETADOS en {elapsed_time/3600:.2f} horas")
+    # ========== RESUMEN FINAL ==========
+    total_time = time.time() - start_time
+    print_header("EXPERIMENTOS COMPLETADOS")
+    print(f"✅ {total_experiments} experimentos completados")
+    print(f"✅ {total_experiments * num_games} partidas jugadas")
+    print(f"⏱️  Tiempo total: {total_time/60:.1f} minutos ({total_time/3600:.2f} horas)")
+    print(f"📁 Resultados en carpeta: results/")
+    print(f"\n📊 Para analizar los resultados, ejecuta: jupyter notebook Analysis.ipynb")
 
 
-def run_extensive_experiments():
+def run_quick_test():
     """
-    Ejecuta experimentos extensivos (para ejecución nocturna).
-    Configuración exhaustiva con muchas partidas.
+    Ejecuta un test rápido con menos partidas para verificar que todo funciona.
     """
-    print_header("MODO EXTENSIVO - EJECUCIÓN NOCTURNA")
-    print("🌙 Ejecutando suite exhaustiva de experimentos...")
-    print("   - 50-100 partidas por configuración")
-    print("   - Profundidades: 2, 3, 4, 5")
-    print("   - Todas las configuraciones de heurísticas")
-    print("   - Tiempo estimado: 8-12 horas (NOCTURNO)")
-    print("\n⚠️  ASEGÚRATE DE:")
-    print("   1. Tener suficiente espacio en disco")
-    print("   2. Que el ordenador no se apague")
-    print("   3. Cerrar otros programas pesados\n")
+    print_header("TEST RÁPIDO (5 partidas por experimento)")
+    print("⚡ Tiempo estimado: 1-2 horas")
+    print("\nEsto ejecutará todos los experimentos con solo 5 partidas cada uno.")
     
-    input("Presiona ENTER para continuar o Ctrl+C para cancelar...")
+    try:
+        response = input("\n¿Continuar? (S/N): ")
+    except EOFError:
+        response = "S"
+        print("S")
     
-    suite = ExperimentSuite(output_dir="results")
-    start_time = time.time()
+    if response.lower() != 's':
+        print("❌ Test cancelado")
+        return
     
-    # 1. Baseline
-    print("\n" + "="*80)
-    print("1/8: Baseline con Agente Aleatorio")
-    print("="*80)
-    suite.run_baseline_comparison(num_games=100)
-    
-    # 2. Expectimax - Profundidades
-    print("\n" + "="*80)
-    print("2/8: Expectimax - Comparación de Profundidades")
-    print("="*80)
-    suite.run_depth_comparison(
-        ExpectimaxAgentOptimized,
-        "Expectimax",
-        depths=[2, 3, 4, 5],
-        num_games=50,
-        weights_config='balanced'
-    )
-    
-    # 3. Minimax - Profundidades
-    print("\n" + "="*80)
-    print("3/8: Minimax - Comparación de Profundidades")
-    print("="*80)
-    suite.run_depth_comparison(
-        MinimaxAgentOptimized,
-        "Minimax",
-        depths=[2, 3, 4, 5],
-        num_games=50,
-        weights_config='balanced'
-    )
-    
-    # 4. Alpha-Beta Pruning
-    print("\n" + "="*80)
-    print("4/8: Impacto de Alpha-Beta Pruning")
-    print("="*80)
-    suite.run_alpha_beta_comparison(depth=4, num_games=50, weights_config='balanced')
-    
-    # 5. Heurísticas - Expectimax
-    print("\n" + "="*80)
-    print("5/8: Expectimax - Comparación de Heurísticas")
-    print("="*80)
-    suite.run_heuristic_comparison(
-        ExpectimaxAgentOptimized,
-        "Expectimax",
-        depth=4,
-        num_games=30
-    )
-    
-    # 6. Heurísticas - Minimax
-    print("\n" + "="*80)
-    print("6/8: Minimax - Comparación de Heurísticas")
-    print("="*80)
-    suite.run_heuristic_comparison(
-        MinimaxAgentOptimized,
-        "Minimax",
-        depth=4,
-        num_games=30
-    )
-    
-    # 7. Minimax vs Expectimax (profundidad 4)
-    print("\n" + "="*80)
-    print("7/8: Minimax vs Expectimax (depth=4)")
-    print("="*80)
-    suite.run_minimax_vs_expectimax(depth=4, num_games=50, weights_config='balanced')
-    
-    # 8. Minimax vs Expectimax (profundidad 5)
-    print("\n" + "="*80)
-    print("8/8: Minimax vs Expectimax (depth=5)")
-    print("="*80)
-    suite.run_minimax_vs_expectimax(depth=5, num_games=30, weights_config='balanced')
-    
-    # Guardar resultados
-    suite.save_best_configs()
-    
-    elapsed_time = time.time() - start_time
-    print_header(f"✓ EXPERIMENTOS EXTENSIVOS COMPLETADOS en {elapsed_time/3600:.2f} horas")
-    
-    print("\n📁 ARCHIVOS GENERADOS:")
-    print("   - results/*.csv : Resultados de cada experimento")
-    print("   - results/best_configurations_*.csv : Mejores configuraciones")
-    print("   - models/ : Configuraciones óptimas guardadas")
-    print("\n📊 SIGUIENTE PASO:")
-    print("   Abre Analysis.ipynb para visualizar y analizar los resultados")
+    run_complete_experiments(num_games=5)
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='Ejecutar experimentos del ejercicio MEC (2048)',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Modos de ejecución:
-  quick     : Pruebas rápidas (10-15 min) - para verificar que todo funciona
-  standard  : Experimentos completos (2-4 horas) - para trabajo normal
-  extensive : Experimentos exhaustivos (8-12 horas) - para ejecución nocturna
-
-Ejemplos:
-  python run_experiments.py quick      # Prueba rápida
-  python run_experiments.py standard   # Ejecución estándar
-  python run_experiments.py extensive  # Ejecución nocturna completa
-        """
-    )
+    """Punto de entrada principal"""
+    print("\n" + "=" * 80)
+    print("EXPERIMENTOS 2048 - OBLIGATORIO MEC")
+    print("=" * 80)
+    print("\nModos disponibles:")
+    print("1. Quick Test (5 partidas/experimento) - 1-2 horas")
+    print("2. Standard (20 partidas/experimento) - 6-12 horas")
+    print("3. Salir")
     
-    parser.add_argument(
-        'mode',
-        choices=['quick', 'standard', 'extensive'],
-        nargs='?',
-        default='standard',
-        help='Modo de ejecución (default: standard)'
-    )
+    choice = input("\nSelecciona una opción (1-3): ")
     
-    args = parser.parse_args()
-    
-    print_header(f"EXPERIMENTOS MEC - 2048")
-    print(f"Fecha/Hora inicio: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"Modo: {args.mode.upper()}")
-    
-    try:
-        if args.mode == 'quick':
-            run_quick_experiments()
-        elif args.mode == 'standard':
-            run_standard_experiments()
-        elif args.mode == 'extensive':
-            run_extensive_experiments()
+    if choice == "1":
+        run_quick_test()
+    elif choice == "2":
+        print_header("MODO STANDARD")
+        print("⚠️  ADVERTENCIA: Esto tomará 6-12 horas")
+        print("⚠️  Asegúrate de que:")
+        print("   - El ordenador NO se suspenda automáticamente")
+        print("   - Tengas al menos 1 GB de espacio libre")
+        print("   - Otros programas pesados estén cerrados")
         
-        print_header("🎉 ¡TODOS LOS EXPERIMENTOS FINALIZADOS CON ÉXITO! 🎉")
-        print("\n📋 PRÓXIMOS PASOS:")
-        print("   1. Revisa los archivos CSV en la carpeta 'results/'")
-        print("   2. Abre y ejecuta Analysis.ipynb para visualizar resultados")
-        print("   3. Usa los gráficos y estadísticas para tu informe")
-        print("\n✓ ¡Buen trabajo! Los experimentos se completaron correctamente.\n")
+        try:
+            response = input("\n¿Continuar? (S/N): ")
+        except EOFError:
+            response = "S"
+            print("S")
         
-    except KeyboardInterrupt:
-        print("\n\n❌ Experimentos interrumpidos por el usuario.")
-        print("Los resultados parciales se han guardado en 'results/'")
-        sys.exit(1)
-    except Exception as e:
-        print(f"\n\n❌ Error durante la ejecución: {str(e)}")
-        print("Revisa los logs y los resultados parciales en 'results/'")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+        if response.lower() == 's':
+            run_complete_experiments(num_games=20)
+        else:
+            print("❌ Experimentos cancelados")
+    else:
+        print("👋 Saliendo...")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\n❌ Experimentos interrumpidos por el usuario")
+        print("⚠️  Los resultados parciales se han guardado en 'results/'")
+    except Exception as e:
+        print(f"\n\n❌ Error durante los experimentos: {e}")
+        import traceback
+        traceback.print_exc()
