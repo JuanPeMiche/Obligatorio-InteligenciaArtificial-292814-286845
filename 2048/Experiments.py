@@ -57,7 +57,7 @@ class GameExperiment:
             
             # Log si un movimiento tarda más de 60 segundos
             if move_time > 60:
-                print(f"\n⚠️  Movimiento {moves+1} tardó {move_time:.1f}s")
+                print(f"\nADVERTENCIA: Movimiento {moves+1} tardó {move_time:.1f}s")
                 sys.stdout.flush()
             
             # Registrar nodos explorados si el agente lo soporta
@@ -227,7 +227,7 @@ class ExperimentSuite:
         combined_df = pd.concat(results, ignore_index=True)
         filename = f"{self.output_dir}/{agent_type.lower()}_depth_comparison_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         combined_df.to_csv(filename, index=False)
-        print(f"\n✓ Resultados guardados en: {filename}")
+        print(f"\nResultados guardados en: {filename}")
         sys.stdout.flush()
         
         self.all_results.append(combined_df)
@@ -260,7 +260,7 @@ class ExperimentSuite:
         combined_df = pd.concat(results, ignore_index=True)
         filename = f"{self.output_dir}/{agent_type.lower()}_heuristic_comparison_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         combined_df.to_csv(filename, index=False)
-        print(f"\n✓ Resultados guardados en: {filename}")
+        print(f"\nResultados guardados en: {filename}")
         
         self.all_results.append(combined_df)
         return combined_df
@@ -294,7 +294,7 @@ class ExperimentSuite:
         combined_df = pd.concat(results, ignore_index=True)
         filename = f"{self.output_dir}/alpha_beta_comparison_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         combined_df.to_csv(filename, index=False)
-        print(f"\n✓ Resultados guardados en: {filename}")
+        print(f"\nResultados guardados en: {filename}")
         
         self.all_results.append(combined_df)
         return combined_df
@@ -328,7 +328,7 @@ class ExperimentSuite:
         combined_df = pd.concat(results, ignore_index=True)
         filename = f"{self.output_dir}/minimax_vs_expectimax_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         combined_df.to_csv(filename, index=False)
-        print(f"\n✓ Resultados guardados en: {filename}")
+        print(f"\nResultados guardados en: {filename}")
         
         # Comparación estadística
         self._compare_agents(df_minimax, df_expectimax, "Minimax", "Expectimax")
@@ -350,7 +350,7 @@ class ExperimentSuite:
         
         filename = f"{self.output_dir}/baseline_random_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         df.to_csv(filename, index=False)
-        print(f"\n✓ Resultados guardados en: {filename}")
+        print(f"\nResultados guardados en: {filename}")
         
         self.all_results.append(df)
         return df
@@ -408,13 +408,13 @@ class ExperimentSuite:
         # Guardar
         filename = f"{self.output_dir}/best_configurations_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         best_configs.to_csv(filename)
-        print(f"\n✓ Mejores configuraciones guardadas en: {filename}")
+        print(f"\nMejores configuraciones guardadas en: {filename}")
         
         # Guardar como pickle también
         pickle_file = f"{self.output_dir}/all_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pkl"
         with open(pickle_file, 'wb') as f:
             pickle.dump(self.all_results, f)
-        print(f"✓ Resultados completos guardados en: {pickle_file}")
+        print(f"Resultados completos guardados en: {pickle_file}")
 
 
 def run_quick_test():

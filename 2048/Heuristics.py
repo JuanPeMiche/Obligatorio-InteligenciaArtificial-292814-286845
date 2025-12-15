@@ -322,7 +322,7 @@ def get_heuristic(name: str):
         Función heurística
     """
     if name not in HEURISTICS:
-        print(f"⚠️  Heurística '{name}' no encontrada. Usando 'intermediate'.")
+        print(f"ADVERTENCIA: Heurística '{name}' no encontrada. Usando 'intermediate'.")
         return HEURISTICS['intermediate']
     
     return HEURISTICS[name]

@@ -55,10 +55,10 @@ def run_complete_experiments(num_games: int = 20):
     experiment_number = 1
     total_experiments = len(depths) * len(heuristics) * len(configs) * 3  # 2 depths × 3 heurísticas × 2 configs × 3 agentes
     
-    print(f"📊 Total de experimentos a ejecutar: {total_experiments}")
-    print(f"📊 Partidas por experimento: {num_games}")
-    print(f"📊 Total de partidas: {total_experiments * num_games}")
-    print(f"\n⏱️  Tiempo estimado: 6-12 horas\n")
+    print(f"Total de experimentos a ejecutar: {total_experiments}")
+    print(f"Partidas por experimento: {num_games}")
+    print(f"Total de partidas: {total_experiments * num_games}")
+    print(f"\nTiempo estimado: 6-12 horas\n")
     
     try:
         input("Presiona ENTER para comenzar...")
@@ -112,7 +112,7 @@ def run_complete_experiments(num_games: int = 20):
                 # Guardar resultado individual
                 filename = f"results/{agent_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
                 df.to_csv(filename, index=False)
-                print(f"✅ Guardado: {filename}")
+                print(f"Guardado: {filename}")
                 
                 all_experiments.append(df)
                 experiment_number += 1
@@ -140,7 +140,7 @@ def run_complete_experiments(num_games: int = 20):
                 # Guardar resultado individual
                 filename_ab = f"results/{agent_name_ab}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
                 df_ab.to_csv(filename_ab, index=False)
-                print(f"✅ Guardado: {filename_ab}")
+                print(f"Guardado: {filename_ab}")
                 
                 all_experiments.append(df_ab)
                 experiment_number += 1
@@ -167,7 +167,7 @@ def run_complete_experiments(num_games: int = 20):
                 # Guardar resultado individual
                 filename_exp = f"results/{agent_name_exp}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
                 df_exp.to_csv(filename_exp, index=False)
-                print(f"✅ Guardado: {filename_exp}")
+                print(f"Guardado: {filename_exp}")
                 
                 all_experiments.append(df_exp)
                 experiment_number += 1
@@ -178,9 +178,9 @@ def run_complete_experiments(num_games: int = 20):
                 remaining_exp = total_experiments - (experiment_number - 1)
                 eta = avg_time_per_exp * remaining_exp
                 
-                print(f"\n⏱️  Progreso: {experiment_number-1}/{total_experiments} completados")
-                print(f"⏱️  Tiempo transcurrido: {elapsed/60:.1f} min")
-                print(f"⏱️  ETA: {eta/60:.1f} min")
+                print(f"\nProgreso: {experiment_number-1}/{total_experiments} completados")
+                print(f"Tiempo transcurrido: {elapsed/60:.1f} min")
+                print(f"ETA: {eta/60:.1f} min")
     
     # ========== GUARDAR RESULTADOS COMBINADOS ==========
     print_header("GUARDANDO RESULTADOS COMBINADOS")
@@ -188,16 +188,16 @@ def run_complete_experiments(num_games: int = 20):
     combined_df = pd.concat(all_experiments, ignore_index=True)
     combined_filename = f"results/all_experiments_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     combined_df.to_csv(combined_filename, index=False)
-    print(f"✅ Todos los resultados guardados en: {combined_filename}")
+    print(f"Todos los resultados guardados en: {combined_filename}")
     
     # ========== RESUMEN FINAL ==========
     total_time = time.time() - start_time
     print_header("EXPERIMENTOS COMPLETADOS")
-    print(f"✅ {total_experiments} experimentos completados")
-    print(f"✅ {total_experiments * num_games} partidas jugadas")
-    print(f"⏱️  Tiempo total: {total_time/60:.1f} minutos ({total_time/3600:.2f} horas)")
-    print(f"📁 Resultados en carpeta: results/")
-    print(f"\n📊 Para analizar los resultados, ejecuta: jupyter notebook Analysis.ipynb")
+    print(f"{total_experiments} experimentos completados")
+    print(f"{total_experiments * num_games} partidas jugadas")
+    print(f"Tiempo total: {total_time/60:.1f} minutos ({total_time/3600:.2f} horas)")
+    print(f"Resultados en carpeta: results/")
+    print(f"\nPara analizar los resultados, ejecuta: jupyter notebook Analysis.ipynb")
 
 
 def run_quick_test():
@@ -205,7 +205,7 @@ def run_quick_test():
     Ejecuta un test rápido con menos partidas para verificar que todo funciona.
     """
     print_header("TEST RÁPIDO (5 partidas por experimento)")
-    print("⚡ Tiempo estimado: 1-2 horas")
+    print("Tiempo estimado: 1-2 horas")
     print("\nEsto ejecutará todos los experimentos con solo 5 partidas cada uno.")
     
     try:
@@ -215,7 +215,7 @@ def run_quick_test():
         print("S")
     
     if response.lower() != 's':
-        print("❌ Test cancelado")
+        print("Test cancelado")
         return
     
     run_complete_experiments(num_games=5)
@@ -237,8 +237,8 @@ def main():
         run_quick_test()
     elif choice == "2":
         print_header("MODO STANDARD")
-        print("⚠️  ADVERTENCIA: Esto tomará 6-12 horas")
-        print("⚠️  Asegúrate de que:")
+        print("ADVERTENCIA: Esto tomará 6-12 horas")
+        print("Asegúrate de que:")
         print("   - El ordenador NO se suspenda automáticamente")
         print("   - Tengas al menos 1 GB de espacio libre")
         print("   - Otros programas pesados estén cerrados")
@@ -252,18 +252,18 @@ def main():
         if response.lower() == 's':
             run_complete_experiments(num_games=20)
         else:
-            print("❌ Experimentos cancelados")
+            print("Experimentos cancelados")
     else:
-        print("👋 Saliendo...")
+        print("Saliendo...")
 
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n❌ Experimentos interrumpidos por el usuario")
-        print("⚠️  Los resultados parciales se han guardado en 'results/'")
+        print("\n\nExperimentos interrumpidos por el usuario")
+        print("Los resultados parciales se han guardado en 'results/'")
     except Exception as e:
-        print(f"\n\n❌ Error durante los experimentos: {e}")
+        print(f"\n\nError durante los experimentos: {e}")
         import traceback
         traceback.print_exc()
