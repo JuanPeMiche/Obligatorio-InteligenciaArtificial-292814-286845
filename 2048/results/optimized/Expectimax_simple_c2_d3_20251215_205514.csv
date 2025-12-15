@@ -1,0 +1,6 @@
+game_id,agent_name,max_tile,final_score,moves,time_seconds,won,nodes_explored,avg_time_per_move,timestamp,depth,heuristic,config,alpha_beta,algorithm
+0,Expectimax_simple_c2_d3,1024,1788,822,234.75168013572693,False,1650208,0.28558598556657777,2025-12-15T20:37:13.291023,3,simple,2,False,expectimax
+1,Expectimax_simple_c2_d3,512,1124,497,115.23260545730591,False,825815,0.2318563490086638,2025-12-15T20:39:08.524633,3,simple,2,False,expectimax
+2,Expectimax_simple_c2_d3,1024,2004,914,329.06619119644165,False,2351581,0.3600286555759755,2025-12-15T20:44:37.591828,3,simple,2,False,expectimax
+3,Expectimax_simple_c2_d3,1024,1690,770,282.05205249786377,False,1626675,0.36630136688034254,2025-12-15T20:49:19.644795,3,simple,2,False,expectimax
+4,Expectimax_simple_c2_d3,1024,2092,947,354.85307812690735,False,2389880,0.37471285969050405,2025-12-15T20:55:14.498370,3,simple,2,False,expectimax
