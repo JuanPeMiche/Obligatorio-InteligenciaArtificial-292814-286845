@@ -28,16 +28,36 @@ class MinimaxAgent(Agent):
         
         self.nodes_explored = 0
         self.pruned_nodes = 0
+        self.use_adaptive_depth = True  # Activar profundidad adaptativa
+    
+    def get_adaptive_depth(self, board: GameBoard) -> int:
+        """Ajusta profundidad según número de celdas vacías para evitar explosión combinatoria."""
+        if not self.use_adaptive_depth:
+            return self.depth
+        
+        empty_cells = len(board.get_available_cells())
+        
+        if empty_cells <= 3:
+            return self.depth + 1  # Más profundo con pocas opciones
+        elif empty_cells <= 6:
+            return self.depth
+        elif empty_cells <= 10:
+            return max(2, self.depth - 1)
+        else:
+            return max(2, self.depth - 2)  # Menos profundo al inicio
     
     def play(self, board: GameBoard) -> int:
         """
-        Elige la mejor acción usando Minimax.
+        Elige la mejor acción usando Minimax con profundidad adaptativa.
         
         Returns:
             Acción a tomar (0=UP, 1=DOWN, 2=LEFT, 3=RIGHT)
         """
         self.nodes_explored = 0
         self.pruned_nodes = 0
+        
+        # Usar profundidad adaptativa
+        depth = self.get_adaptive_depth(board)
         
         best_action = None
         best_value = -np.inf
@@ -49,15 +69,25 @@ class MinimaxAgent(Agent):
         if not available_moves:
             return 0
         
+        # Ordenar movimientos por heurística rápida (mejor poda)
+        move_values = []
         for move in available_moves:
+            board_copy = board.clone()
+            board_copy.move(move)
+            quick_val = len(board_copy.get_available_cells()) * 10 + board_copy.get_max_tile()
+            move_values.append((move, quick_val))
+        
+        move_values.sort(key=lambda x: x[1], reverse=True)
+        
+        for move, _ in move_values:
             board_copy = board.clone()
             board_copy.move(move)
             
             if self.use_alpha_beta:
-                value = self.minimax(board_copy, self.depth - 1, False, alpha, beta)
+                value = self.minimax(board_copy, depth - 1, False, alpha, beta)
                 alpha = max(alpha, value)
             else:
-                value = self.minimax(board_copy, self.depth - 1, False, -np.inf, np.inf)
+                value = self.minimax(board_copy, depth - 1, False, -np.inf, np.inf)
             
             if value > best_value:
                 best_value = value
@@ -119,7 +149,7 @@ class MinimaxAgent(Agent):
     def min_node(self, board: GameBoard, depth: int, alpha: float, beta: float) -> float:
         """
         Nodo minimizador: simula el peor caso (ficha en peor posición).
-        En 2048, esto simula al "oponente" colocando fichas en las peores posiciones.
+        Optimizado con muestreo adaptativo según profundidad.
         """
         min_value = np.inf
         available_cells = board.get_available_cells()
@@ -127,26 +157,37 @@ class MinimaxAgent(Agent):
         if not available_cells:
             return self.heuristic_utility(board)
         
-        # Para eficiencia, evaluar solo algunas celdas si hay muchas
-        if len(available_cells) > 6:
-            # Evaluar las 6 celdas más críticas
-            cells_to_evaluate = self._select_critical_cells(board, available_cells, 6)
+        # Muestreo adaptativo según profundidad (OPTIMIZACIÓN CLAVE)
+        if depth >= 2:
+            max_cells = 3  # Solo 3 celdas en niveles altos
+        elif depth == 1:
+            max_cells = 5  # 5 celdas en nivel medio
+        else:
+            max_cells = len(available_cells)  # Todas en hojas
+        
+        if len(available_cells) > max_cells:
+            cells_to_evaluate = self._select_critical_cells(board, available_cells, max_cells)
         else:
             cells_to_evaluate = available_cells
         
         for cell in cells_to_evaluate:
-            # Probar con ficha de valor 2 (más común)
-            board_copy = board.clone()
-            board_copy.insert_tile(cell, 2)
-            value_2 = self.minimax(board_copy, depth, True, alpha, beta)
+            # Solo evaluar ficha 2 en niveles profundos (simplificación estocástica)
+            if depth >= 2:
+                board_copy = board.clone()
+                board_copy.insert_tile(cell, 2)
+                value = self.minimax(board_copy, depth, True, alpha, beta)
+            else:
+                # Evaluar ambos valores solo cerca de hojas
+                board_copy = board.clone()
+                board_copy.insert_tile(cell, 2)
+                value_2 = self.minimax(board_copy, depth, True, alpha, beta)
+                
+                board_copy = board.clone()
+                board_copy.insert_tile(cell, 4)
+                value_4 = self.minimax(board_copy, depth, True, alpha, beta)
+                
+                value = min(value_2, value_4)
             
-            # Probar con ficha de valor 4
-            board_copy = board.clone()
-            board_copy.insert_tile(cell, 4)
-            value_4 = self.minimax(board_copy, depth, True, alpha, beta)
-            
-            # El minimizador elige el peor caso
-            value = min(value_2, value_4)
             min_value = min(min_value, value)
             
             if self.use_alpha_beta:

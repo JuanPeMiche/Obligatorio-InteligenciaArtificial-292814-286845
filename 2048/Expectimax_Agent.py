@@ -25,15 +25,36 @@ class ExpectimaxAgent(Agent):
         self.heuristic_func = None  # Se asigna externamente
         
         self.nodes_explored = 0  # Para estadísticas
+        self.use_adaptive_depth = True  # Activar profundidad adaptativa
+    
+    def get_adaptive_depth(self, board: GameBoard) -> int:
+        """Ajusta profundidad según número de celdas vacías."""
+        if not self.use_adaptive_depth:
+            return self.depth
+        
+        empty_cells = len(board.get_available_cells())
+        
+        if empty_cells <= 3:
+            return self.depth + 1
+        elif empty_cells <= 6:
+            return self.depth
+        elif empty_cells <= 10:
+            return max(2, self.depth - 1)
+        else:
+            return max(2, self.depth - 2)
     
     def play(self, board: GameBoard) -> int:
         """
-        Elige la mejor acción usando Expectimax.
+        Elige la mejor acción usando Expectimax con profundidad adaptativa.
         
         Returns:
             Acción a tomar (0=UP, 1=DOWN, 2=LEFT, 3=RIGHT)
         """
         self.nodes_explored = 0
+        
+        # Usar profundidad adaptativa
+        depth = self.get_adaptive_depth(board)
+        
         best_action = None
         best_value = -np.inf
         
@@ -48,7 +69,7 @@ class ExpectimaxAgent(Agent):
             board_copy.move(move)
             
             # Calcular valor esperado del movimiento
-            value = self.expectimax(board_copy, self.depth - 1, False)
+            value = self.expectimax(board_copy, depth - 1, False)
             
             if value > best_value:
                 best_value = value
@@ -104,8 +125,7 @@ class ExpectimaxAgent(Agent):
     def chance_node(self, board: GameBoard, depth: int) -> float:
         """
         Nodo de chance: calcula el valor esperado de agregar fichas aleatorias.
-        - 90% probabilidad de ficha con valor 2
-        - 10% probabilidad de ficha con valor 4
+        Optimizado con muestreo adaptativo según profundidad.
         """
         available_cells = board.get_available_cells()
         
@@ -115,13 +135,17 @@ class ExpectimaxAgent(Agent):
         expected_value = 0.0
         num_empty = len(available_cells)
         
-        # Para eficiencia, si hay muchas celdas vacías, muestrear solo algunas
-        if num_empty > 6:
-            # Muestrear hasta 6 celdas vacías aleatorias
-            sampled_cells = np.random.choice(len(available_cells), 
-                                            min(6, num_empty), 
-                                            replace=False)
-            cells_to_evaluate = [available_cells[i] for i in sampled_cells]
+        # Muestreo adaptativo según profundidad (OPTIMIZACIÓN CLAVE)
+        if depth >= 2:
+            max_cells = 3  # Solo 3 celdas en niveles altos
+        elif depth == 1:
+            max_cells = 5  # 5 celdas en nivel medio
+        else:
+            max_cells = num_empty  # Todas en hojas
+        
+        if num_empty > max_cells:
+            sampled_indices = np.random.choice(num_empty, max_cells, replace=False)
+            cells_to_evaluate = [available_cells[i] for i in sampled_indices]
             weight_per_cell = num_empty / len(cells_to_evaluate)
         else:
             cells_to_evaluate = available_cells
@@ -129,18 +153,23 @@ class ExpectimaxAgent(Agent):
         
         # Evaluar cada posible ficha nueva
         for cell in cells_to_evaluate:
-            # Probar con ficha de valor 2 (90% probabilidad)
-            board_copy = board.clone()
-            board_copy.insert_tile(cell, 2)
-            value_2 = self.expectimax(board_copy, depth, True)
+            # Solo evaluar ficha 2 en niveles profundos (simplificación estocástica)
+            if depth >= 2:
+                board_copy = board.clone()
+                board_copy.insert_tile(cell, 2)
+                cell_value = self.expectimax(board_copy, depth, True)
+            else:
+                # Evaluar ambos valores solo cerca de hojas
+                board_copy = board.clone()
+                board_copy.insert_tile(cell, 2)
+                value_2 = self.expectimax(board_copy, depth, True)
+                
+                board_copy = board.clone()
+                board_copy.insert_tile(cell, 4)
+                value_4 = self.expectimax(board_copy, depth, True)
+                
+                cell_value = 0.9 * value_2 + 0.1 * value_4
             
-            # Probar con ficha de valor 4 (10% probabilidad)
-            board_copy = board.clone()
-            board_copy.insert_tile(cell, 4)
-            value_4 = self.expectimax(board_copy, depth, True)
-            
-            # Valor esperado para esta celda
-            cell_value = 0.9 * value_2 + 0.1 * value_4
             expected_value += cell_value * weight_per_cell
         
         # Promedio sobre todas las celdas evaluadas
